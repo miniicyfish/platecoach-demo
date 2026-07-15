@@ -1,0 +1,2056 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PlateCoach 餐时饮食教练 Demo</title>
+  <style>
+    :root {
+      --ink: #1f211d;
+      --muted: #74786f;
+      --paper: #f7f5ef;
+      --paper-2: #fffdfa;
+      --line: rgba(32, 35, 31, .12);
+      --green: #315d48;
+      --green-2: #e7f0e6;
+      --leaf: #789466;
+      --lime: #d8df94;
+      --amber: #bd7d3d;
+      --coral: #bf594d;
+      --blue: #597f92;
+      --night: #171b18;
+      --watch: #111411;
+      --shadow: 0 24px 70px rgba(42, 44, 38, .18);
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--paper);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Avenir Next", "Trebuchet MS", "Helvetica Neue", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.72), transparent 42%),
+        radial-gradient(circle at 52% 12%, rgba(216, 223, 148, .18), transparent 32%),
+        var(--paper);
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .stage {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(250px, 340px) minmax(360px, 430px) minmax(270px, 360px);
+      gap: clamp(18px, 3vw, 44px);
+      align-items: center;
+      justify-content: center;
+      padding: clamp(18px, 4vw, 56px);
+      overflow-x: hidden;
+    }
+
+    .context-panel,
+    .coach-panel {
+      align-self: stretch;
+      min-height: 620px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .brand-mark {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--night);
+      color: var(--paper-2);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      box-shadow: 0 16px 46px rgba(32, 35, 31, .18);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 7px solid var(--lime);
+      bottom: -9px;
+      right: -7px;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 10ch;
+      font-size: clamp(42px, 5vw, 70px);
+      line-height: .96;
+      letter-spacing: 0;
+      font-weight: 850;
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 31rem;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.58;
+    }
+
+    .principles {
+      display: grid;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .principle {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: center;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .principle .dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      color: var(--green);
+      box-shadow: 0 8px 20px rgba(32, 35, 31, .07);
+    }
+
+    .phone-wrap {
+      display: grid;
+      place-items: center;
+    }
+
+    .phone {
+      width: min(100%, 410px);
+      aspect-ratio: 390 / 810;
+      background: #111612;
+      border-radius: 44px;
+      padding: 12px;
+      box-shadow: 0 34px 90px rgba(32, 35, 31, .22), inset 0 0 0 1px rgba(255, 255, 255, .1);
+      position: relative;
+    }
+
+    .phone::before {
+      content: "";
+      width: 106px;
+      height: 28px;
+      background: #111612;
+      border-radius: 0 0 18px 18px;
+      position: absolute;
+      left: 50%;
+      top: 11px;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+
+    .screen {
+      height: 100%;
+      border-radius: 34px;
+      background: #fffefa;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.6);
+    }
+
+    .screen-header {
+      height: 54px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 22px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      position: relative;
+      z-index: 4;
+    }
+
+    .signal {
+      display: flex;
+      gap: 5px;
+      align-items: flex-end;
+    }
+
+    .signal span {
+      display: block;
+      width: 4px;
+      border-radius: 4px;
+      background: var(--ink);
+    }
+
+    .signal span:nth-child(1) { height: 7px; opacity: .45; }
+    .signal span:nth-child(2) { height: 10px; opacity: .6; }
+    .signal span:nth-child(3) { height: 13px; }
+
+    .onboarding,
+    .app {
+      position: absolute;
+      inset: 54px 0 0;
+      transition: opacity .35s ease, transform .35s ease;
+    }
+
+    .app {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(24px);
+    }
+
+    body.ready .onboarding {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-24px);
+    }
+
+    body.ready .app {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    .onboarding {
+      display: flex;
+      flex-direction: column;
+      padding: 18px 22px 22px;
+    }
+
+    .step-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .step-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .step-dots span {
+      width: 22px;
+      height: 5px;
+      border-radius: 10px;
+      background: rgba(32, 35, 31, .12);
+    }
+
+    .step-dots span.active {
+      background: var(--green);
+    }
+
+    .slide {
+      display: none;
+      flex: 1;
+      padding-top: 26px;
+      min-height: 0;
+    }
+
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide h2 {
+      margin: 0 0 12px;
+      font-size: 32px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .slide p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+
+    .coach-card {
+      margin-top: 22px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 18px;
+      background: #fffdf6;
+      box-shadow: 0 18px 38px rgba(32, 35, 31, .08);
+    }
+
+    .coach-face {
+      width: 78px;
+      height: 78px;
+      border-radius: 26px;
+      background: #f1eadf;
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+      color: var(--green);
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .coach-face::before {
+      content: "";
+      position: absolute;
+      inset: 15px;
+      border: 10px solid var(--green-2);
+      border-right-color: var(--green);
+      border-radius: 50%;
+    }
+
+    .coach-face span {
+      position: relative;
+      z-index: 1;
+      font-size: 13px;
+    }
+
+    .choice-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .choice {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 13px 14px;
+      background: rgba(255, 255, 255, .7);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      color: var(--ink);
+      font-weight: 800;
+      text-align: left;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+
+    .choice small {
+      display: block;
+      color: var(--muted);
+      font-weight: 700;
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+
+    .choice.selected,
+    .choice:hover {
+      border-color: rgba(47, 107, 79, .45);
+      background: var(--green-2);
+      transform: translateY(-1px);
+    }
+
+    .check {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid rgba(47, 107, 79, .35);
+      flex: 0 0 auto;
+      position: relative;
+    }
+
+    .choice.selected .check {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .choice.selected .check::after {
+      content: "";
+      position: absolute;
+      width: 9px;
+      height: 5px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg);
+      left: 6px;
+      top: 6px;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .input-tile {
+      background: rgba(255,255,255,.72);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .input-tile label {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .input-tile input,
+    .input-tile select {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 900;
+      font-size: 18px;
+      outline: none;
+    }
+
+    .onboard-actions {
+      display: flex;
+      gap: 10px;
+      padding-top: 18px;
+    }
+
+    .primary,
+    .secondary {
+      height: 50px;
+      border-radius: 18px;
+      border: 0;
+      padding: 0 18px;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+    }
+
+    .primary {
+      flex: 1;
+      background: var(--night);
+      color: var(--paper-2);
+      box-shadow: 0 16px 30px rgba(32, 35, 31, .2);
+    }
+
+    .secondary {
+      width: 74px;
+      background: rgba(32,35,31,.07);
+      color: var(--ink);
+    }
+
+    .app {
+      overflow: auto;
+      padding: 15px 16px 92px;
+      scrollbar-width: none;
+    }
+
+    .app::-webkit-scrollbar {
+      display: none;
+    }
+
+    .today-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .greeting strong {
+      display: block;
+      font-size: 23px;
+      line-height: 1.05;
+    }
+
+    .greeting span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .coach-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 17px;
+      background: var(--green-2);
+      display: grid;
+      place-items: center;
+      color: var(--green);
+      font-weight: 900;
+      border: 1px solid rgba(47,107,79,.16);
+    }
+
+    .goal-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .metric {
+      background: #fffdf6;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 13px;
+    }
+
+    .metric label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .metric b {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .metric small {
+      color: var(--muted);
+      font-weight: 800;
+      margin-left: 4px;
+    }
+
+    .progress {
+      height: 7px;
+      background: rgba(32,35,31,.09);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      background: var(--green);
+      border-radius: inherit;
+      width: 32%;
+      transition: width .5s ease;
+    }
+
+    .hero-meal {
+      position: relative;
+      overflow: hidden;
+      min-height: 250px;
+      border-radius: 28px;
+      background: var(--night);
+      color: white;
+      box-shadow: 0 18px 40px rgba(32, 35, 31, .16);
+    }
+
+    .meal-photo {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(180deg, rgba(10, 12, 10, .08), rgba(10, 12, 10, .72)),
+        url("https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80");
+      background-size: cover;
+      background-position: center;
+      transform: scale(1.02);
+    }
+
+    .meal-content {
+      position: relative;
+      z-index: 1;
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 18px;
+      gap: 12px;
+    }
+
+    .plate-marker {
+      position: absolute;
+      z-index: 2;
+      min-width: 78px;
+      min-height: 30px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.38);
+      background: rgba(17, 22, 18, .58);
+      color: #fffdf6;
+      backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 11px;
+      font-size: 11px;
+      font-weight: 900;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .28s ease, transform .28s ease;
+    }
+
+    body.analyzed .plate-marker {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .plate-marker.protein {
+      top: 62px;
+      right: 38px;
+    }
+
+    .plate-marker.veg {
+      top: 118px;
+      left: 28px;
+    }
+
+    .plate-marker.sugar {
+      right: 28px;
+      bottom: 96px;
+      background: rgba(115, 68, 28, .62);
+    }
+
+    .scan-tag {
+      align-self: flex-start;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: rgba(255,255,255,.16);
+      backdrop-filter: blur(12px);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .meal-content h2 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.02;
+      letter-spacing: 0;
+      max-width: 9ch;
+    }
+
+    .analyze-btn {
+      height: 52px;
+      border-radius: 18px;
+      border: 0;
+      background: var(--lime);
+      color: var(--ink);
+      font-weight: 900;
+      box-shadow: 0 14px 28px rgba(0,0,0,.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+    }
+
+    .camera-icon,
+    .spark-icon,
+    .watch-icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      display: inline-block;
+      position: relative;
+    }
+
+    .camera-icon {
+      border: 2px solid currentColor;
+      border-radius: 5px;
+    }
+
+    .camera-icon::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      position: absolute;
+      left: 3.5px;
+      top: 3.5px;
+    }
+
+    .camera-icon::after {
+      content: "";
+      width: 7px;
+      height: 3px;
+      border-radius: 3px;
+      background: currentColor;
+      position: absolute;
+      top: -5px;
+      left: 4px;
+    }
+
+    .spark-icon::before,
+    .spark-icon::after {
+      content: "";
+      position: absolute;
+      background: currentColor;
+      border-radius: 999px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .spark-icon::before { width: 3px; height: 18px; }
+    .spark-icon::after { width: 18px; height: 3px; }
+
+    .results {
+      display: none;
+      margin-top: 12px;
+      animation: lift .42s ease both;
+    }
+
+    body.analyzed .results {
+      display: block;
+    }
+
+    @keyframes lift {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .score-card {
+      background: #fffdf6;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .score-head {
+      display: grid;
+      grid-template-columns: 104px 1fr;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .score-ring {
+      width: 104px;
+      height: 104px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        conic-gradient(var(--amber) 0 74%, rgba(32,35,31,.09) 74% 100%);
+      position: relative;
+    }
+
+    .score-ring::after {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      background: #fffdf6;
+      border-radius: 50%;
+    }
+
+    .score-ring b {
+      position: relative;
+      z-index: 1;
+      font-size: 29px;
+      line-height: 1;
+    }
+
+    .score-copy h3 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      line-height: 1.15;
+    }
+
+    .score-copy p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .nutrition-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .nutri {
+      border-radius: 15px;
+      padding: 11px 9px;
+      background: rgba(32,35,31,.05);
+    }
+
+    .nutri label {
+      display: block;
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .nutri b {
+      font-size: 17px;
+    }
+
+    .coach-note {
+      display: none;
+      background: var(--night);
+      color: var(--paper-2);
+      border-radius: 24px;
+      padding: 17px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .coach-note.visible {
+      display: block;
+      animation: lift .26s ease both;
+    }
+
+    .coach-note::after {
+      content: "";
+      position: absolute;
+      width: 130px;
+      height: 130px;
+      border: 22px solid rgba(215,234,116,.18);
+      border-radius: 50%;
+      right: -52px;
+      top: -48px;
+    }
+
+    .coach-note label {
+      display: block;
+      color: var(--lime);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .coach-note p {
+      margin: 0;
+      position: relative;
+      z-index: 1;
+      line-height: 1.55;
+      font-weight: 800;
+    }
+
+    .flex-card {
+      margin: 12px 0;
+      background: #fffdf6;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 16px;
+      box-shadow: 0 18px 40px rgba(32, 35, 31, .07);
+    }
+
+    .flex-card label {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .flex-card h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .flex-card p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .flex-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .flex-action {
+      min-height: 50px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(32, 35, 31, .04);
+      color: var(--ink);
+      font-weight: 900;
+      line-height: 1.12;
+      padding: 8px;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      transition: background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .flex-action small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.2;
+      margin-top: 4px;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .flex-action.active,
+    .flex-action:hover {
+      background: var(--green-2);
+      border-color: rgba(49, 93, 72, .32);
+      transform: translateY(-1px);
+    }
+
+    .plan-shift {
+      display: none;
+      margin-top: 12px;
+      border-radius: 18px;
+      background: rgba(32,35,31,.05);
+      padding: 13px;
+      gap: 9px;
+    }
+
+    .plan-shift.visible {
+      display: grid;
+      animation: lift .26s ease both;
+    }
+
+    .plan-shift-row {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 10px;
+      align-items: start;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+
+    .plan-shift-row b {
+      color: var(--green);
+      font-size: 12px;
+    }
+
+    .coach-scale {
+      margin-top: 12px;
+      border-radius: 18px;
+      background: rgba(32,35,31,.04);
+      padding: 12px;
+    }
+
+    .scale-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .scale-head b {
+      color: var(--green);
+      font-size: 12px;
+    }
+
+    .coach-scale input {
+      width: 100%;
+      accent-color: var(--green);
+      display: block;
+    }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .permission-card {
+      display: none;
+      margin-top: 12px;
+      border-radius: 18px;
+      background: var(--night);
+      color: var(--paper-2);
+      padding: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .permission-card.visible {
+      display: block;
+      animation: lift .26s ease both;
+    }
+
+    .permission-card::after {
+      content: "";
+      position: absolute;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: 18px solid rgba(216,223,148,.17);
+      right: -34px;
+      top: -32px;
+    }
+
+    .permission-card label,
+    .permission-card strong,
+    .permission-card span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .permission-card label {
+      display: block;
+      color: var(--lime);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .permission-card strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.12;
+      margin-bottom: 5px;
+    }
+
+    .permission-card span {
+      display: block;
+      color: rgba(255,253,246,.72);
+      font-size: 12px;
+      line-height: 1.4;
+      font-weight: 800;
+    }
+
+    .bottom-nav {
+      position: absolute;
+      bottom: 14px;
+      left: 16px;
+      right: 16px;
+      height: 62px;
+      border-radius: 23px;
+      background: rgba(255,253,246,.86);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: center;
+      z-index: 4;
+      box-shadow: 0 16px 36px rgba(32,35,31,.13);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: opacity .28s ease, transform .28s ease;
+    }
+
+    body.ready .bottom-nav {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .nav-item {
+      border: 0;
+      background: transparent;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      padding: 0;
+    }
+
+    .nav-dot {
+      width: 19px;
+      height: 19px;
+      border: 2px solid currentColor;
+      border-radius: 7px;
+    }
+
+    .nav-item.active {
+      color: var(--green);
+    }
+
+    .tab-page {
+      display: none;
+      animation: lift .28s ease both;
+    }
+
+    .tab-page.active {
+      display: block;
+    }
+
+    .quiet-hero {
+      background: #fffdf6;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 20px;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 18px 40px rgba(32, 35, 31, .08);
+    }
+
+    .quiet-hero h2 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .quiet-hero p {
+      color: var(--muted);
+      line-height: 1.52;
+      font-weight: 700;
+      margin: 10px 0 0;
+    }
+
+    .simple-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .simple-row {
+      min-height: 58px;
+      border-radius: 18px;
+      background: #fffdf6;
+      border: 1px solid var(--line);
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .simple-row strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+
+    .simple-row span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .simple-row b {
+      color: var(--green);
+      font-size: 17px;
+    }
+
+    .coach-message {
+      min-height: 210px;
+      background: var(--night);
+      color: var(--paper-2);
+      border-radius: 28px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .coach-message::before {
+      content: "";
+      position: absolute;
+      width: 170px;
+      height: 170px;
+      border: 28px solid rgba(216,223,148,.16);
+      border-radius: 50%;
+      right: -62px;
+      top: -64px;
+    }
+
+    .coach-message h2,
+    .coach-message p {
+      position: relative;
+      z-index: 1;
+    }
+
+    .coach-message h2 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.04;
+    }
+
+    .coach-message p {
+      margin: 10px 0 0;
+      color: rgba(255,253,246,.74);
+      line-height: 1.5;
+      font-weight: 700;
+    }
+
+    .watch-zone {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      flex-wrap: wrap;
+    }
+
+    .watch {
+      width: 190px;
+      height: 230px;
+      background: #222721;
+      border-radius: 54px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .watch::before,
+    .watch::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      width: 84px;
+      height: 36px;
+      transform: translateX(-50%);
+      background: #222721;
+      z-index: -1;
+    }
+
+    .watch::before {
+      top: -24px;
+      border-radius: 24px 24px 6px 6px;
+    }
+
+    .watch::after {
+      bottom: -24px;
+      border-radius: 6px 6px 24px 24px;
+    }
+
+    .crown {
+      width: 10px;
+      height: 42px;
+      background: #2c322c;
+      border-radius: 10px;
+      position: absolute;
+      right: -6px;
+      top: 72px;
+    }
+
+    .watch-screen {
+      height: 100%;
+      border-radius: 44px;
+      background: var(--watch);
+      color: #f8f5e8;
+      padding: 16px 13px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .watch-time {
+      display: flex;
+      justify-content: space-between;
+      color: rgba(248,245,232,.64);
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .watch-ring {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background:
+        conic-gradient(var(--lime) 0 64%, rgba(255,255,255,.12) 64% 100%);
+      display: grid;
+      place-items: center;
+      margin: 0 auto 9px;
+      position: relative;
+    }
+
+    .watch-ring::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border-radius: 50%;
+      background: var(--watch);
+    }
+
+    .watch-ring b {
+      position: relative;
+      z-index: 1;
+      font-size: 18px;
+    }
+
+    .watch-card {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 18px;
+      padding: 10px;
+    }
+
+    .watch-card strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.2;
+      margin-bottom: 5px;
+    }
+
+    .watch-card span {
+      color: rgba(248,245,232,.67);
+      font-size: 10px;
+      line-height: 1.28;
+      font-weight: 800;
+    }
+
+    .side-card {
+      background: rgba(255,250,240,.74);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: 0 18px 42px rgba(32, 35, 31, .08);
+    }
+
+    .side-card h2,
+    .side-card h3 {
+      margin: 0 0 9px;
+      letter-spacing: 0;
+      line-height: 1.08;
+    }
+
+    .side-card p {
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .time-row {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      gap: 12px;
+      align-items: start;
+      font-size: 13px;
+    }
+
+    .time-row b {
+      color: var(--green);
+    }
+
+    .time-row span {
+      color: var(--muted);
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .review-card {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .mini-chart {
+      height: 72px;
+      display: flex;
+      align-items: end;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 18px;
+      background: rgba(32,35,31,.05);
+    }
+
+    .mini-chart span {
+      flex: 1;
+      border-radius: 999px 999px 4px 4px;
+      background: var(--green);
+      min-height: 18px;
+    }
+
+    .mini-chart span:nth-child(2) { height: 72%; background: var(--amber); }
+    .mini-chart span:nth-child(3) { height: 45%; background: var(--green); }
+    .mini-chart span:nth-child(4) { height: 82%; background: var(--coral); }
+    .mini-chart span:nth-child(5) { height: 58%; background: var(--leaf); }
+
+    .next-steps {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .next-steps span {
+      min-height: 38px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.62);
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .mode-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.58);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      width: fit-content;
+    }
+
+    .mode-pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 5px rgba(47,107,79,.12);
+    }
+
+    @media (max-width: 1120px) {
+      .stage {
+        grid-template-columns: minmax(340px, 430px) minmax(270px, 360px);
+      }
+
+      .context-panel {
+        grid-column: 1 / -1;
+        min-height: auto;
+        align-self: auto;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: end;
+      }
+
+      .context-panel .lead,
+      .principles {
+        max-width: none;
+      }
+
+      h1 {
+        max-width: 12ch;
+        font-size: 52px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        background-size: 42px 42px, 42px 42px, auto, auto, auto;
+      }
+
+      .stage {
+        grid-template-columns: 1fr;
+        padding: 18px 14px 38px;
+      }
+
+      .context-panel {
+        display: flex;
+        gap: 14px;
+      }
+
+      .context-panel,
+      .coach-panel {
+        min-height: auto;
+        align-self: auto;
+      }
+
+      h1 {
+        font-size: 42px;
+      }
+
+      .lead {
+        font-size: 15px;
+      }
+
+      .principles {
+        grid-template-columns: 1fr;
+      }
+
+      .phone {
+        width: min(100%, 390px);
+      }
+
+      .watch-zone {
+        justify-content: center;
+      }
+
+      .side-card {
+        border-radius: 20px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .phone {
+        border-radius: 34px;
+        padding: 8px;
+      }
+
+      .screen {
+        border-radius: 28px;
+      }
+
+      .slide h2 {
+        font-size: 28px;
+      }
+
+      .score-head {
+        grid-template-columns: 86px 1fr;
+      }
+
+      .score-ring {
+        width: 86px;
+        height: 86px;
+      }
+
+      .nutrition-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <section class="context-panel" aria-label="产品定位">
+      <div class="brand-mark">PC</div>
+      <div>
+        <div class="mode-pill">PlateCoach Demo</div>
+        <h1>每一餐，刚刚好。</h1>
+        <p class="lead">拍下你正在吃的东西。得到一句清楚的判断，和下一步该怎么吃。</p>
+        <div class="principles">
+          <div class="principle"><span class="dot">1</span><span>记录不打扰吃饭</span></div>
+          <div class="principle"><span class="dot">2</span><span>判断不制造焦虑</span></div>
+          <div class="principle"><span class="dot">3</span><span>计划跟着当天变化</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="phone-wrap" aria-label="手机应用演示">
+      <div class="phone">
+        <div class="screen">
+          <div class="screen-header">
+            <span>9:41</span>
+            <div class="signal" aria-hidden="true"><span></span><span></span><span></span></div>
+          </div>
+
+          <section class="onboarding" aria-label="启动设置">
+            <div class="step-meta">
+              <span id="stepLabel">启动设置</span>
+              <div class="step-dots" aria-hidden="true">
+                <span class="active"></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+
+            <div class="slide active" data-step="0">
+              <h2>从今天这顿开始。</h2>
+              <p>PlateCoach 会记住你的目标。每一餐，只给你必要的判断。</p>
+              <div class="coach-card">
+                <div class="coach-face"><span>Coach</span></div>
+                <p>设定目标。然后开始吃饭。</p>
+              </div>
+            </div>
+
+            <div class="slide" data-step="1">
+              <h2>你最近最在意什么？</h2>
+              <p>先选一个。之后可以随时改。</p>
+              <div class="choice-grid" data-choice-group="goal">
+                <button class="choice selected" data-value="控制体重"><span>控制体重<small>稳一点，不极端</small></span><i class="check"></i></button>
+                <button class="choice" data-value="保持健康"><span>保持健康<small>吃得更均衡</small></span><i class="check"></i></button>
+                <button class="choice" data-value="增肌塑形"><span>增肌塑形<small>蛋白质优先</small></span><i class="check"></i></button>
+                <button class="choice" data-value="少糖少油"><span>少糖少油<small>少一点负担</small></span><i class="check"></i></button>
+              </div>
+            </div>
+
+            <div class="slide" data-step="2">
+              <h2>设定你的日常范围。</h2>
+              <p>不是每天重设。它会成为之后判断每一餐的基准。</p>
+              <div class="profile-grid">
+                <div class="input-tile"><label>身高</label><input value="168 cm" aria-label="身高"></div>
+                <div class="input-tile"><label>体重</label><input value="64 kg" aria-label="体重"></div>
+                <div class="input-tile"><label>年龄</label><input value="29" aria-label="年龄"></div>
+                <div class="input-tile"><label>活动量</label><select aria-label="活动量"><option>轻度活动</option><option>久坐</option><option>规律训练</option></select></div>
+              </div>
+              <div class="coach-card">
+                <p>你的日常目标约 1,900 kcal。每天会根据实际记录自动调整建议。</p>
+              </div>
+            </div>
+
+            <div class="slide" data-step="3">
+              <h2>你通常在哪吃？</h2>
+              <p>建议会贴近真实生活。</p>
+              <div class="choice-grid" data-choice-group="scene">
+                <button class="choice selected" data-value="外卖较多"><span>外卖较多<small>看油盐和酱料</small></span><i class="check"></i></button>
+                <button class="choice" data-value="食堂通勤"><span>食堂通勤<small>帮你做搭配</small></span><i class="check"></i></button>
+                <button class="choice" data-value="家庭餐"><span>家庭餐<small>看连续习惯</small></span><i class="check"></i></button>
+              </div>
+            </div>
+
+            <div class="slide" data-step="4">
+              <h2>提醒要多直接？</h2>
+              <p>可以明确，但不刺耳。</p>
+              <div class="choice-grid" data-choice-group="tone">
+                <button class="choice" data-value="温和提醒"><span>温和提醒<small>多鼓励，少压力</small></span><i class="check"></i></button>
+                <button class="choice selected" data-value="标准教练"><span>标准教练<small>先判断，再给可执行纠偏</small></span><i class="check"></i></button>
+                <button class="choice" data-value="更严格一点"><span>更严格一点<small>更早提醒热量和糖油风险</small></span><i class="check"></i></button>
+              </div>
+              <div class="coach-card">
+                <p>手表只保留关键一句。更多判断，回到手机看。</p>
+              </div>
+            </div>
+
+            <div class="onboard-actions">
+              <button class="secondary" id="backBtn" aria-label="上一步">←</button>
+              <button class="primary" id="nextBtn">继续</button>
+            </div>
+          </section>
+
+          <section class="app" aria-label="主界面">
+            <div class="tab-page active" data-tab-panel="today">
+              <div class="today-top">
+                <div class="greeting">
+                  <span>今日目标 · 控制体重</span>
+                  <strong>午餐前，状态稳定。</strong>
+                </div>
+                <div class="coach-badge">C</div>
+              </div>
+
+              <div class="goal-strip">
+                <div class="metric">
+                  <label>今日摄入</label>
+                  <b id="kcalNow">610</b><small>/ 1900 kcal</small>
+                  <div class="progress"><span id="kcalBar"></span></div>
+                </div>
+                <div class="metric">
+                  <label>饮食状态</label>
+                  <b id="stateNow">稳</b><small>可控</small>
+                  <div class="progress"><span style="width:58%; background:var(--leaf)"></span></div>
+                </div>
+              </div>
+
+              <section class="hero-meal">
+                <div class="meal-photo" role="img" aria-label="一份午餐餐盘"></div>
+                <span class="plate-marker protein">蛋白质 OK</span>
+                <span class="plate-marker veg">蔬菜偏少</span>
+                <span class="plate-marker sugar">糖油偏高</span>
+                <div class="meal-content">
+                  <span class="scan-tag">午餐 · 鸡肉盖饭 + 炸物 + 奶茶</span>
+                  <h2>先看这一餐。</h2>
+                  <button class="analyze-btn" id="analyzeBtn"><span class="camera-icon"></span><span>分析午餐</span></button>
+                </div>
+              </section>
+
+              <section class="results" aria-live="polite">
+                <div class="score-card">
+                  <div class="score-head">
+                    <div class="score-ring"><b>74</b></div>
+                    <div class="score-copy">
+                      <h3>这顿偏重，但不用重来。</h3>
+                      <p>约 820 kcal。蛋白质够，糖油偏高。</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex-card">
+                  <label>轻量协商</label>
+                  <h3 id="flexTitle">这顿要按什么意图处理？</h3>
+                  <p id="flexCopy">不是聊天框。你只要选一个意图，我再改写后面的计划。</p>
+                  <div class="flex-actions">
+                    <button class="flex-action" data-flex="normal">正常记录<small>按今天调整</small></button>
+                    <button class="flex-action" data-flex="treat">放纵餐<small>纳入本周计划</small></button>
+                    <button class="flex-action" data-flex="recover">帮我补救<small>接下来怎么吃</small></button>
+                  </div>
+                  <div class="coach-scale">
+                    <div class="scale-head"><span>今天的教练尺度</span><b id="scaleValue">标准</b></div>
+                    <input id="scaleInput" type="range" min="0" max="2" step="1" value="1" aria-label="今天的教练尺度">
+                    <div class="scale-labels"><span>放松</span><span>标准</span><span>严格</span></div>
+                  </div>
+                  <div class="permission-card" id="permissionCard">
+                    <label>许可判断</label>
+                    <strong id="permissionTitle">可以吃。</strong>
+                    <span id="permissionCopy">这顿会被纳入本周弹性区，而不是算作失控。</span>
+                  </div>
+                  <div class="plan-shift" id="planShift">
+                    <div class="plan-shift-row"><b id="shiftDay1">今晚</b><span id="shiftCopy1">主食减半，补两份蔬菜。</span></div>
+                    <div class="plan-shift-row"><b id="shiftDay2">明天</b><span id="shiftCopy2">回到日常范围，不需要更严格。</span></div>
+                  </div>
+                </div>
+
+                <div class="coach-note">
+                  <label id="coachLabel">等待选择</label>
+                  <p id="coachAdvice">先告诉我这顿的意图。我会再给出晚餐和这周后面的调整。</p>
+                </div>
+              </section>
+            </div>
+
+            <div class="tab-page" data-tab-panel="log">
+              <div class="quiet-hero">
+                <div>
+                  <span class="scan-tag" style="color:var(--green); border-color:var(--line); background:#f3efe6">记录</span>
+                  <h2>少输入。多确认。</h2>
+                  <p>拍照、语音、手动补充都可以。系统先估算，用户只在需要时修正。</p>
+                </div>
+                <button class="analyze-btn" type="button"><span class="camera-icon"></span><span>拍一餐</span></button>
+              </div>
+              <div class="simple-list">
+                <div class="simple-row"><div><strong>早餐</strong><span>燕麦、鸡蛋、咖啡</span></div><b>610</b></div>
+                <div class="simple-row"><div><strong>午餐</strong><span>等待拍照确认</span></div><b>+</b></div>
+                <div class="simple-row"><div><strong>饮水</strong><span>手表快速记录</span></div><b>700ml</b></div>
+              </div>
+            </div>
+
+            <div class="tab-page" data-tab-panel="reminders">
+              <div class="coach-message">
+                <h2>提醒，只在关键时刻。</h2>
+                <p>饭点、偏离、复盘。其他时间安静。</p>
+              </div>
+              <div class="simple-list">
+                <div class="simple-row"><div><strong>饭点提醒</strong><span>午餐前给一句建议</span></div><b>开</b></div>
+                <div class="simple-row"><div><strong>偏离提醒</strong><span>糖油偏高时提醒</span></div><b>中</b></div>
+                <div class="simple-row"><div><strong>晚间复盘</strong><span>21:30 只推一句</span></div><b>开</b></div>
+              </div>
+            </div>
+
+            <div class="tab-page" data-tab-panel="tracking">
+              <div class="quiet-hero">
+                <div>
+                  <span class="scan-tag" style="color:var(--green); border-color:var(--line); background:#f3efe6">跟踪</span>
+                  <h2>这一周，晚餐最影响你。</h2>
+                  <p>不是每餐都要完美。先改最常出现的那个偏差。</p>
+                </div>
+              </div>
+              <div class="simple-list">
+                <div class="simple-row"><div><strong>甜饮</strong><span>本周 4 次</span></div><b>-2</b></div>
+                <div class="simple-row"><div><strong>蔬菜</strong><span>晚餐常不足</span></div><b>补</b></div>
+                <div class="simple-row"><div><strong>下周重点</strong><span>晚餐主食减半 3 天</span></div><b>1项</b></div>
+              </div>
+            </div>
+
+          </section>
+          <nav class="bottom-nav" aria-label="底部导航">
+            <button class="nav-item active" data-tab="today"><span class="nav-dot"></span><span>今日</span></button>
+            <button class="nav-item" data-tab="log"><span class="nav-dot"></span><span>记录</span></button>
+            <button class="nav-item" data-tab="reminders"><span class="nav-dot"></span><span>提醒</span></button>
+            <button class="nav-item" data-tab="tracking"><span class="nav-dot"></span><span>跟踪</span></button>
+          </nav>
+        </div>
+      </div>
+    </section>
+
+    <aside class="coach-panel" aria-label="手表和复盘">
+      <div class="watch-zone">
+        <div class="watch" aria-label="Apple Watch 轻提醒界面">
+          <div class="crown"></div>
+          <div class="watch-screen">
+            <div class="watch-time"><span>12:42</span><span id="watchMode">今日</span></div>
+            <div class="watch-ring"><b id="watchScore">稳</b></div>
+            <div class="watch-card">
+              <strong id="watchTitle">午餐前状态稳定</strong>
+              <span id="watchText">今天还有 1,290 kcal 空间。午餐优先保证蛋白质和蔬菜。</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <h2>一句就够。</h2>
+          <p>手表只出现关键提醒。复杂判断留在手机。</p>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <h3>今天的节奏</h3>
+        <div class="timeline">
+          <div class="time-row"><b>08:20</b><span>早餐偏轻。</span></div>
+          <div class="time-row"><b>12:45</b><span id="timelineLunch">等待午餐拍照，暂不调整晚餐。</span></div>
+          <div class="time-row"><b>19:00</b><span id="timelineDinner">晚餐建议会在午餐分析后更新。</span></div>
+        </div>
+      </div>
+
+      <div class="side-card review-card">
+        <div class="mini-chart" aria-label="一周趋势图">
+          <span style="height:48%"></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div>
+          <h3>复盘不堆数据。</h3>
+          <p>只告诉你下一周最值得改的一件事。</p>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <h3>信息架构</h3>
+        <div class="next-steps">
+          <span>今日：状态和当餐判断</span>
+          <span>记录：拍照、语音、手动补充</span>
+          <span>提醒：饭点、偏离、复盘</span>
+          <span>跟踪：长期趋势和下一步</span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const body = document.body;
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const dots = Array.from(document.querySelectorAll(".step-dots span"));
+    const stepLabel = document.getElementById("stepLabel");
+    const nextBtn = document.getElementById("nextBtn");
+    const backBtn = document.getElementById("backBtn");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const kcalNow = document.getElementById("kcalNow");
+    const kcalBar = document.getElementById("kcalBar");
+    const stateNow = document.getElementById("stateNow");
+    const watchScore = document.getElementById("watchScore");
+    const watchMode = document.getElementById("watchMode");
+    const watchTitle = document.getElementById("watchTitle");
+    const watchText = document.getElementById("watchText");
+    const timelineLunch = document.getElementById("timelineLunch");
+    const timelineDinner = document.getElementById("timelineDinner");
+    const navItems = Array.from(document.querySelectorAll("[data-tab]"));
+    const tabPages = Array.from(document.querySelectorAll("[data-tab-panel]"));
+    const flexActions = Array.from(document.querySelectorAll("[data-flex]"));
+    const flexTitle = document.getElementById("flexTitle");
+    const flexCopy = document.getElementById("flexCopy");
+    const shiftDay1 = document.getElementById("shiftDay1");
+    const shiftCopy1 = document.getElementById("shiftCopy1");
+    const shiftDay2 = document.getElementById("shiftDay2");
+    const shiftCopy2 = document.getElementById("shiftCopy2");
+    const planShift = document.getElementById("planShift");
+    const scaleInput = document.getElementById("scaleInput");
+    const scaleValue = document.getElementById("scaleValue");
+    const permissionCard = document.getElementById("permissionCard");
+    const permissionTitle = document.getElementById("permissionTitle");
+    const permissionCopy = document.getElementById("permissionCopy");
+    const coachLabel = document.getElementById("coachLabel");
+    const coachAdvice = document.getElementById("coachAdvice");
+    let step = 0;
+    let activeFlexMode = null;
+
+    const scaleLabels = ["放松", "标准", "严格"];
+
+    const flexStates = {
+      normal: {
+        title: "这顿按正常午餐记录。",
+        copy: "系统会把晚餐调轻一点。你不用跳餐，也不用额外补偿。",
+        day1: "今晚",
+        line1: "主食减半，补两份蔬菜。",
+        day2: "明天",
+        line2: "回到日常范围，不需要更严格。",
+        advice: "晚餐：清淡蛋白质 + 两份蔬菜。主食减半，不再加甜饮。",
+        watchMode: "晚餐",
+        watchTitle: "晚餐轻一点。",
+        watchText: "还剩约 470 kcal。甜饮先停。",
+        lunch: "午餐约 820 kcal。糖油偏高。",
+        dinner: "清淡蛋白质 + 两份蔬菜。",
+        label: "已按正常记录",
+        permission: null,
+        scaleAdvice: [
+          "今晚轻一点就好。主食不必完全去掉，甜饮先停。",
+          "晚餐：清淡蛋白质 + 两份蔬菜。主食减半，不再加甜饮。",
+          "晚餐主食减半，甜饮暂停。睡前不加零食。"
+        ]
+      },
+      treat: {
+        title: "可以，当作放纵餐。",
+        copy: "这周前半段稳定。保留一个最想吃的主角，别把甜饮和炸物都叠满。",
+        day1: "今天",
+        line1: "这顿纳入弹性区，不再追加零食。",
+        day2: "周四-周五",
+        line2: "晚餐回到轻量区，不做补偿式节食。",
+        advice: "可以吃。把它算作本周一次弹性餐，接下来两天晚餐轻一点就够。",
+        watchMode: "放纵餐",
+        watchTitle: "已纳入计划。",
+        watchText: "吃完正常回到节奏。别补偿式节食。",
+        lunch: "午餐作为本周弹性餐处理。",
+        dinner: "今天不加零食，周四周五晚餐轻一点。",
+        label: "本周计划已重排",
+        permission: {
+          title: "可以吃。",
+          copy: "这顿纳入本周弹性区，不算失控。重点是别叠加第二个放纵项。"
+        },
+        scaleAdvice: [
+          "可以。把这顿当作本周一次弹性餐，吃完正常回到节奏。",
+          "可以吃。把它算作本周一次弹性餐，接下来两天晚餐轻一点就够。",
+          "可以吃，但只保留一个最想吃的主角。甜饮和炸物不要同时叠满。"
+        ]
+      },
+      recover: {
+        title: "可以补救，但别惩罚自己。",
+        copy: "这餐已经偏重。接下来只需要把糖饮停掉，并把晚餐做得更清爽。",
+        day1: "今晚",
+        line1: "清汤、鱼/鸡蛋/豆腐、两份蔬菜。",
+        day2: "明天",
+        line2: "早餐正常吃，午餐补蛋白质。",
+        advice: "接下来停甜饮。晚餐吃清淡蛋白质和蔬菜，明天正常吃早餐。",
+        watchMode: "补救",
+        watchTitle: "别跳餐。",
+        watchText: "晚餐清爽一点，明早正常吃。",
+        lunch: "午餐偏重，已进入补救方案。",
+        dinner: "停甜饮，晚餐清爽但不跳餐。",
+        label: "补救方案",
+        permission: null,
+        scaleAdvice: [
+          "别急着补偿。今晚吃清爽一点，明早照常吃。",
+          "接下来停甜饮。晚餐吃清淡蛋白质和蔬菜，明天正常吃早餐。",
+          "今晚控制主食和零食，但不要跳餐。明天午餐补足蛋白质。"
+        ]
+      }
+    };
+
+    function updateStep() {
+      slides.forEach((slide, index) => slide.classList.toggle("active", index === step));
+      dots.forEach((dot, index) => dot.classList.toggle("active", index <= step));
+      backBtn.style.display = step === 0 ? "none" : "inline-flex";
+      nextBtn.textContent = step === slides.length - 1 ? "进入今日计划" : "继续";
+      stepLabel.textContent = step === 0 ? "启动设置" : `第 ${step} 步 / ${slides.length - 1}`;
+    }
+
+    nextBtn.addEventListener("click", () => {
+      if (step < slides.length - 1) {
+        step += 1;
+        updateStep();
+      } else {
+        body.classList.add("ready");
+      }
+    });
+
+    backBtn.addEventListener("click", () => {
+      if (step > 0) {
+        step -= 1;
+        updateStep();
+      }
+    });
+
+    document.querySelectorAll(".choice-grid").forEach(group => {
+      group.addEventListener("click", event => {
+        const choice = event.target.closest(".choice");
+        if (!choice) return;
+        group.querySelectorAll(".choice").forEach(item => item.classList.remove("selected"));
+        choice.classList.add("selected");
+      });
+    });
+
+    navItems.forEach(item => {
+      item.addEventListener("click", () => {
+        const tab = item.dataset.tab;
+        navItems.forEach(nav => nav.classList.toggle("active", nav === item));
+        tabPages.forEach(page => page.classList.toggle("active", page.dataset.tabPanel === tab));
+        const labels = { today: "今日", log: "记录", reminders: "提醒", tracking: "跟踪" };
+        watchMode.textContent = labels[tab] || "今日";
+        document.querySelector(".app").scrollTo({ top: 0, behavior: "smooth" });
+      });
+    });
+
+    function applyFlexState(mode) {
+      const state = flexStates[mode];
+      if (!state) return;
+      activeFlexMode = mode;
+      flexActions.forEach(action => action.classList.toggle("active", action.dataset.flex === mode));
+      flexTitle.textContent = state.title;
+      flexCopy.textContent = state.copy;
+      planShift.classList.add("visible");
+      document.querySelector(".coach-note").classList.add("visible");
+      if (state.permission) {
+        permissionCard.classList.add("visible");
+        permissionTitle.textContent = state.permission.title;
+        permissionCopy.textContent = state.permission.copy;
+      } else {
+        permissionCard.classList.remove("visible");
+      }
+      shiftDay1.textContent = state.day1;
+      shiftCopy1.textContent = state.line1;
+      shiftDay2.textContent = state.day2;
+      shiftCopy2.textContent = state.line2;
+      coachLabel.textContent = state.label;
+      coachAdvice.textContent = state.scaleAdvice[Number(scaleInput.value)] || state.advice;
+      watchMode.textContent = state.watchMode;
+      watchTitle.textContent = state.watchTitle;
+      watchText.textContent = state.watchText;
+      timelineLunch.textContent = state.lunch;
+      timelineDinner.textContent = state.dinner;
+    }
+
+    flexActions.forEach(action => {
+      action.addEventListener("click", () => applyFlexState(action.dataset.flex));
+    });
+
+    scaleInput.addEventListener("input", () => {
+      scaleValue.textContent = scaleLabels[Number(scaleInput.value)];
+      if (activeFlexMode) applyFlexState(activeFlexMode);
+    });
+
+    analyzeBtn.addEventListener("click", () => {
+      analyzeBtn.innerHTML = '<span class="spark-icon"></span><span>正在估算份量和结构</span>';
+      analyzeBtn.disabled = true;
+
+      window.setTimeout(() => {
+        body.classList.add("analyzed");
+        analyzeBtn.innerHTML = '<span class="spark-icon"></span><span>已生成教练建议</span>';
+        kcalNow.textContent = "1430";
+        kcalBar.style.width = "75%";
+        stateNow.textContent = "紧";
+        watchScore.textContent = "74";
+        activeFlexMode = null;
+        scaleInput.value = "1";
+        scaleValue.textContent = "标准";
+        flexActions.forEach(action => action.classList.remove("active"));
+        planShift.classList.remove("visible");
+        permissionCard.classList.remove("visible");
+        document.querySelector(".coach-note").classList.remove("visible");
+        flexTitle.textContent = "这顿要按什么意图处理？";
+        flexCopy.textContent = "不是聊天框。你只要选一个意图，我再改写后面的计划。";
+        coachLabel.textContent = "等待选择";
+        coachAdvice.textContent = "先告诉我这顿的意图。我会再给出晚餐和这周后面的调整。";
+        watchMode.textContent = "选择";
+        watchTitle.textContent = "怎么处理这顿？";
+        watchText.textContent = "正常记录、放纵餐，或帮你补救。";
+        timelineLunch.textContent = "午餐已分析，等待选择处理方式。";
+        timelineDinner.textContent = "选择后再调整晚餐。";
+        document.querySelector(".app").scrollTo({ top: 520, behavior: "smooth" });
+      }, 720);
+    });
+
+    updateStep();
+  </script>
+</body>
+</html>
